@@ -1,0 +1,7 @@
+[package]
+name = "orrery"
+version = "0.1.0"
+edition = "2021"
+description = "A celestial mechanics simulation engine"
+
+[dependencies]

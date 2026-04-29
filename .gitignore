@@ -1,0 +1,16 @@
+# Rust
+rust/target/
+
+# Kotlin
+kotlin/build/
+kotlin/.gradle/
+
+# C++
+cpp/build/
+*.ppm
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
