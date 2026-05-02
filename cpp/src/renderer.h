@@ -53,13 +53,14 @@ struct RenderBody {
 
 class Renderer {
 public:
-    Renderer(int width, int height, double scale);
+    Renderer(int width, int height, double max_radius);
     void render_frame(const std::vector<RenderBody>& bodies);
     void write_ppm(const std::string& filename) const;
 
 private:
     int width_, height_;
-    double scale_;
+    double max_radius_;
+    double pixel_radius_;
     std::vector<uint8_t> framebuffer_;
 
     void clear();
@@ -68,6 +69,7 @@ private:
     void set_pixel_additive(int x, int y, const Color& c);
     Color get_pixel(int x, int y) const;
     std::pair<int,int> project(const Vec3f& pos) const;
+    Vec3f sqrt_warp(const Vec3f& pos) const;
     bool in_bounds(int x, int y) const;
 
     void draw_filled_circle(int cx, int cy, int r, const Color& c);

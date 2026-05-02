@@ -73,8 +73,9 @@ static const uint8_t FONT_5X7[][7] = {
     ['9'] = {0x0E,0x11,0x11,0x0F,0x01,0x02,0x0C},
 };
 
-Renderer::Renderer(int width, int height, double scale)
-    : width_(width), height_(height), scale_(scale),
+Renderer::Renderer(int width, int height, double max_radius)
+    : width_(width), height_(height), max_radius_(max_radius),
+      pixel_radius_(std::min(width, height) * 0.45),
       framebuffer_(width * height * 3, 0) {}
 
 bool Renderer::in_bounds(int x, int y) const {
@@ -143,9 +144,20 @@ void Renderer::generate_starfield(uint32_t seed) {
     }
 }
 
+Vec3f Renderer::sqrt_warp(const Vec3f& pos) const {
+    double r = pos.magnitude();
+    if (r == 0.0) return pos;
+    // sqrt mapping: maps [0, max_radius_] -> [0, pixel_radius_]
+    double normalized = r / max_radius_;
+    double warped = std::sqrt(normalized) * pixel_radius_;
+    Vec3f dir = pos.normalized();
+    return dir * warped;
+}
+
 std::pair<int,int> Renderer::project(const Vec3f& pos) const {
-    int sx = static_cast<int>(pos.x * scale_ + width_ / 2.0);
-    int sy = static_cast<int>(-pos.y * scale_ + height_ / 2.0); // flip Y
+    Vec3f warped = sqrt_warp(pos);
+    int sx = static_cast<int>(warped.x + width_ / 2.0);
+    int sy = static_cast<int>(-warped.y + height_ / 2.0);
     return {sx, sy};
 }
 
