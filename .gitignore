@@ -8,6 +8,8 @@ kotlin/.gradle/
 # C++
 cpp/build/
 *.ppm
+*.mp4
+frames/
 
 # IDE
 .idea/
