@@ -70,6 +70,7 @@ public:
         const std::vector<LegendEntry>& legend = {}
     );
     void write_ppm(const std::string& filename) const;
+    const uint8_t* framebuffer() const { return framebuffer_.data(); }
     int width() const { return width_; }
     int height() const { return height_; }
 
