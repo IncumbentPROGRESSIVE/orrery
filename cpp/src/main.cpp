@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
         SDL_TEXTUREACCESS_STREAMING, W, H);
 
     double dt = 7200.0;
-    int steps_per_frame = 60; // ~5 days per frame
+    int steps_per_frame = 15; // ~1.25 days per frame
     int trail_record = 0;
     bool running = true;
 
