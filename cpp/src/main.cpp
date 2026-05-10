@@ -148,7 +148,10 @@ int main(int argc, char* argv[]) {
         if (trail_record % 2 == 0) {
             for (int i = 0; i < N; ++i) {
                 trails[i].push_back(bodies[i].position);
-                if (trails[i].size() > 300) trails[i].erase(trails[i].begin());
+                // Inner planets (Mercury-Mars): 300 points is fine
+                // Outer planets (Jupiter+) and Halley: keep much longer trails
+                size_t max_trail = (i >= 5) ? 3000 : 300;
+                if (trails[i].size() > max_trail) trails[i].erase(trails[i].begin());
             }
         }
 
