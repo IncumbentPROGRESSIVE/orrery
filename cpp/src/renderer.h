@@ -34,6 +34,10 @@ struct OrbitGuide {
     Color color;
 };
 
+enum class TextureType {
+    FLAT, SUN, MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE, COMET
+};
+
 struct RenderBody {
     std::string name;
     Vec3f position;
@@ -47,6 +51,8 @@ struct RenderBody {
     Color ring_color;
     bool is_comet = false;
     int tail_length = 0;
+    TextureType texture = TextureType::FLAT;
+    double rotation_phase = 0.0;
 };
 
 struct Particle {
@@ -90,6 +96,8 @@ private:
     bool in_bounds(int x, int y) const;
 
     void draw_filled_circle_aa(int cx, int cy, double r, const Color& c);
+    void draw_textured_body(int cx, int cy, double r, const RenderBody& body);
+    Color sample_texture(TextureType tex, double u, double v, double phase, const Color& base);
     void draw_glow(int cx, int cy, int r, const Color& c);
     void draw_trail(const std::vector<Vec3f>& trail, const Color& c);
     void draw_line_aa(int x0, int y0, int x1, int y1, const Color& c, double alpha);

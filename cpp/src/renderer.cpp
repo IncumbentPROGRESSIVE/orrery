@@ -5,6 +5,34 @@
 
 static constexpr double PI = 3.14159265358979323846;
 
+// Simple hash-based noise for procedural textures
+static double hash_noise(double x, double y) {
+    int ix = static_cast<int>(std::floor(x)) * 1619;
+    int iy = static_cast<int>(std::floor(y)) * 31337;
+    int n = ix + iy;
+    n = (n << 13) ^ n;
+    return 1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0;
+}
+
+static double smooth_noise(double x, double y) {
+    double ix = std::floor(x), iy = std::floor(y);
+    double fx = x - ix, fy = y - iy;
+    fx = fx * fx * (3.0 - 2.0 * fx);
+    fy = fy * fy * (3.0 - 2.0 * fy);
+    double a = hash_noise(ix, iy), b = hash_noise(ix+1, iy);
+    double c = hash_noise(ix, iy+1), d = hash_noise(ix+1, iy+1);
+    return a + (b-a)*fx + (c-a)*fy + (a-b-c+d)*fx*fy;
+}
+
+static double fbm(double x, double y, int octaves) {
+    double val = 0.0, amp = 0.5;
+    for (int i = 0; i < octaves; ++i) {
+        val += amp * smooth_noise(x, y);
+        x *= 2.0; y *= 2.0; amp *= 0.5;
+    }
+    return val;
+}
+
 static const uint8_t FONT_5X7[][7] = {
     ['A'] = {0x0E,0x11,0x11,0x1F,0x11,0x11,0x11},
     ['B'] = {0x1E,0x11,0x11,0x1E,0x11,0x11,0x1E},
@@ -154,6 +182,110 @@ Vec3f Renderer::sqrt_warp(const Vec3f& pos) const {
 std::pair<int,int> Renderer::project(const Vec3f& pos) const {
     Vec3f w = sqrt_warp(pos);
     return { static_cast<int>(w.x + width_ / 2.0), static_cast<int>(-w.y + height_ / 2.0) };
+}
+
+// Procedural texture sampling
+Color Renderer::sample_texture(TextureType tex, double u, double v, double phase, const Color& base) {
+    auto clamp = [](double x) { return static_cast<uint8_t>(std::max(0.0, std::min(255.0, x))); };
+
+    switch (tex) {
+    case TextureType::SUN: {
+        double n = fbm(u * 4.0 + phase * 0.5, v * 4.0, 4);
+        double hot = 0.7 + 0.3 * n;
+        double spot = fbm(u * 8.0 + phase, v * 8.0, 3);
+        if (spot > 0.6) hot *= 1.3;
+        return { clamp(255 * hot), clamp(200 * hot), clamp(40 * std::max(0.5, hot - 0.3)) };
+    }
+    case TextureType::MERCURY: {
+        double n = fbm(u * 10.0 + phase * 0.1, v * 10.0, 4);
+        double crater = (n > 0.3) ? 0.7 : 0.9;
+        double base_v = 140.0 * crater;
+        return { clamp(base_v + 20), clamp(base_v + 10), clamp(base_v) };
+    }
+    case TextureType::VENUS: {
+        double bands = std::sin(v * 6.0 + fbm(u * 3.0 + phase * 0.2, v * 2.0, 3) * 2.0);
+        double bright = 0.75 + 0.25 * bands;
+        return { clamp(230 * bright), clamp(200 * bright), clamp(130 * bright) };
+    }
+    case TextureType::EARTH: {
+        double continent = fbm(u * 5.0 + phase * 0.1, v * 5.0, 5);
+        double cloud = fbm(u * 8.0 + phase * 0.4, v * 6.0, 3);
+        // Polar caps
+        if (std::abs(v - 0.5) > 0.4) return {240, 245, 255};
+        if (cloud > 0.4) return { clamp(200 + cloud * 55), clamp(210 + cloud * 45), clamp(220 + cloud * 35) };
+        if (continent > 0.1) return { clamp(60 + continent * 80), clamp(120 + continent * 50), clamp(40) };
+        return { 40, clamp(80 + continent * 40), clamp(180 - continent * 30) };
+    }
+    case TextureType::MARS: {
+        double terrain = fbm(u * 6.0 + phase * 0.05, v * 6.0, 4);
+        double polar = (std::abs(v - 0.5) > 0.42) ? 1.0 : 0.0;
+        if (polar > 0.0) return {220, 215, 210};
+        double r_val = 180 + terrain * 40;
+        double g_val = 80 + terrain * 20;
+        return { clamp(r_val), clamp(g_val), clamp(30 + terrain * 15) };
+    }
+    case TextureType::JUPITER: {
+        double band = std::sin(v * 18.0) * 0.5 + 0.5;
+        double turb = fbm(u * 6.0 + phase * 0.3, v * 12.0, 3) * 0.3;
+        band += turb;
+        // Great Red Spot
+        double spot_u = u + phase * 0.1 - 0.3, spot_v = v - 0.55;
+        double spot_dist = spot_u * spot_u * 4.0 + spot_v * spot_v * 16.0;
+        if (spot_dist < 0.02) {
+            return { 200, clamp(80 - spot_dist * 2000), clamp(50 - spot_dist * 1000) };
+        }
+        Color light{230, 200, 140}, dark{160, 120, 70};
+        return light.blend(dark, band);
+    }
+    case TextureType::SATURN: {
+        double band = std::sin(v * 14.0) * 0.3 + 0.7;
+        double turb = fbm(u * 4.0 + phase * 0.2, v * 8.0, 2) * 0.15;
+        band += turb;
+        return { clamp(220 * band), clamp(200 * band), clamp(140 * band) };
+    }
+    case TextureType::URANUS: {
+        double band = 0.85 + 0.15 * std::sin(v * 8.0 + fbm(u * 3.0, v * 3.0, 2) * 0.5);
+        return { clamp(140 * band), clamp(210 * band), clamp(225 * band) };
+    }
+    case TextureType::NEPTUNE: {
+        double band = 0.8 + 0.2 * std::sin(v * 10.0);
+        double storm = fbm(u * 5.0 + phase * 0.3, v * 5.0, 3);
+        if (storm > 0.5) band *= 1.2;
+        return { clamp(50 * band), clamp(90 * band), clamp(220 * band) };
+    }
+    default:
+        return base;
+    }
+}
+
+void Renderer::draw_textured_body(int cx, int cy, double r, const RenderBody& body) {
+    int ir = static_cast<int>(r) + 2;
+    for (int dy = -ir; dy <= ir; ++dy) {
+        for (int dx = -ir; dx <= ir; ++dx) {
+            double dist = std::sqrt(dx*dx + dy*dy);
+            if (dist <= r + 1.0) {
+                double coverage = std::max(0.0, std::min(1.0, r + 0.5 - dist));
+                // Map pixel to UV on sphere surface
+                double nx = dx / r, ny = dy / r;
+                double nz_sq = 1.0 - nx*nx - ny*ny;
+                if (nz_sq < 0.0) nz_sq = 0.0;
+                double nz = std::sqrt(nz_sq);
+                // Spherical UV
+                double u = 0.5 + std::atan2(nx, nz) / (2.0 * PI);
+                double v = 0.5 - ny * 0.5;
+                // Lighting: simple lambertian from upper-left
+                double light = std::max(0.15, 0.3 * nx + 0.3 * (-ny) + 0.7 * nz);
+
+                Color texel = sample_texture(body.texture, u, v, body.rotation_phase, body.color);
+                Color lit{
+                    static_cast<uint8_t>(std::min(255.0, texel.r * light)),
+                    static_cast<uint8_t>(std::min(255.0, texel.g * light)),
+                    static_cast<uint8_t>(std::min(255.0, texel.b * light))
+                };
+                set_pixel_blend(cx + dx, cy + dy, lit, coverage);
+            }
+        }
+    }
 }
 
 // Anti-aliased filled circle with shading
@@ -399,10 +531,14 @@ void Renderer::render_frame(
         }
     }
 
-    // Layer 7: bodies
+    // Layer 7: bodies (textured or flat)
     for (const auto& body : bodies) {
         auto [sx, sy] = project(body.position);
-        draw_filled_circle_aa(sx, sy, body.display_radius, body.color);
+        if (body.texture != TextureType::FLAT) {
+            draw_textured_body(sx, sy, body.display_radius, body);
+        } else {
+            draw_filled_circle_aa(sx, sy, body.display_radius, body.color);
+        }
     }
 
     // Layer 8: labels

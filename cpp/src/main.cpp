@@ -128,8 +128,9 @@ int main(int argc, char* argv[]) {
         SDL_TEXTUREACCESS_STREAMING, W, H);
 
     double dt = 7200.0;
-    int steps_per_frame = 30; // ~2.5 days per frame
+    int steps_per_frame = 30;
     int trail_record = 0;
+    double rotation_phase = 0.0;
     bool running = true;
 
     while (running) {
@@ -155,18 +156,21 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        // Advance rotation phase
+        rotation_phase += 0.02;
+
         // Build render bodies
         std::vector<RenderBody> rb = {
-            {"Sun",     bodies[0].position, 16, {255,230,80},  70, {200,140,30}, trails[0]},
-            {"Mercury", bodies[1].position,  3, {180,180,180},  6, {80,80,80}, trails[1]},
-            {"Venus",   bodies[2].position,  4, {230,200,140}, 10, {120,100,60}, trails[2]},
-            {"Earth",   bodies[3].position,  5, {70,140,240},  12, {30,60,120}, trails[3]},
-            {"Mars",    bodies[4].position,  4, {220,100,50},   8, {110,50,20}, trails[4]},
-            {"Jupiter", bodies[5].position, 10, {210,180,110}, 22, {100,80,40}, trails[5]},
-            {"Saturn",  bodies[6].position,  8, {220,200,150}, 20, {110,95,50}, trails[6]},
-            {"Uranus",  bodies[7].position,  6, {150,220,230}, 14, {60,100,110}, trails[7]},
-            {"Neptune", bodies[8].position,  6, {60,100,220},  14, {25,45,100}, trails[8]},
-            {"Halley",  bodies[9].position,  2, {180,220,180},  4, {60,90,60}, trails[9]},
+            {"Sun",     bodies[0].position, 16, {255,230,80},  70, {200,140,30}, trails[0], false, 0, 0, {}, false, 0, TextureType::SUN, rotation_phase},
+            {"Mercury", bodies[1].position,  3, {180,180,180},  6, {80,80,80}, trails[1], false, 0, 0, {}, false, 0, TextureType::MERCURY, rotation_phase * 0.017},
+            {"Venus",   bodies[2].position,  4, {230,200,140}, 10, {120,100,60}, trails[2], false, 0, 0, {}, false, 0, TextureType::VENUS, rotation_phase * 0.004},
+            {"Earth",   bodies[3].position,  5, {70,140,240},  12, {30,60,120}, trails[3], false, 0, 0, {}, false, 0, TextureType::EARTH, rotation_phase},
+            {"Mars",    bodies[4].position,  4, {220,100,50},   8, {110,50,20}, trails[4], false, 0, 0, {}, false, 0, TextureType::MARS, rotation_phase * 0.97},
+            {"Jupiter", bodies[5].position, 10, {210,180,110}, 22, {100,80,40}, trails[5], false, 0, 0, {}, false, 0, TextureType::JUPITER, rotation_phase * 2.4},
+            {"Saturn",  bodies[6].position,  8, {220,200,150}, 20, {110,95,50}, trails[6], false, 0, 0, {}, false, 0, TextureType::SATURN, rotation_phase * 2.3},
+            {"Uranus",  bodies[7].position,  6, {150,220,230}, 14, {60,100,110}, trails[7], false, 0, 0, {}, false, 0, TextureType::URANUS, rotation_phase * 1.4},
+            {"Neptune", bodies[8].position,  6, {60,100,220},  14, {25,45,100}, trails[8], false, 0, 0, {}, false, 0, TextureType::NEPTUNE, rotation_phase * 1.5},
+            {"Halley",  bodies[9].position,  2, {180,220,180},  4, {60,90,60}, trails[9], false, 0, 0, {}, false, 0, TextureType::COMET, 0},
         };
         rb[6].has_ring = true; rb[6].ring_inner = 12; rb[6].ring_outer = 20; rb[6].ring_color = {200,180,130};
         rb[9].is_comet = true; rb[9].tail_length = 30;
