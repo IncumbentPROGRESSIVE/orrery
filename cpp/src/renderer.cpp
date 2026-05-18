@@ -191,10 +191,10 @@ Color Renderer::sample_texture(TextureType tex, double u, double v, double phase
     switch (tex) {
     case TextureType::SUN: {
         double n = fbm(u * 4.0 + phase * 0.5, v * 4.0, 4);
-        double hot = 0.7 + 0.3 * n;
+        double hot = 0.85 + 0.15 * n;
         double spot = fbm(u * 8.0 + phase, v * 8.0, 3);
-        if (spot > 0.6) hot *= 1.3;
-        return { clamp(255 * hot), clamp(200 * hot), clamp(40 * std::max(0.5, hot - 0.3)) };
+        if (spot > 0.5) hot = std::min(1.0, hot * 1.4);
+        return { clamp(255 * hot), clamp(240 * hot), clamp(100 * hot) };
     }
     case TextureType::MERCURY: {
         double n = fbm(u * 10.0 + phase * 0.1, v * 10.0, 4);
