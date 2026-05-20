@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
 
         // Build render bodies
         std::vector<RenderBody> rb = {
-            {"Sun",     bodies[0].position, 16, {255,230,80},  90, {255,200,60}, trails[0], false, 0, 0, {}, false, 0, TextureType::SUN, rotation_phase},
+            {"Sun",     bodies[0].position, 16, {255,160,40},  90, {255,120,20}, trails[0], false, 0, 0, {}, false, 0, TextureType::SUN, rotation_phase},
             {"Mercury", bodies[1].position,  3, {180,180,180},  6, {80,80,80}, trails[1], false, 0, 0, {}, false, 0, TextureType::MERCURY, rotation_phase * 0.017},
             {"Venus",   bodies[2].position,  4, {230,200,140}, 10, {120,100,60}, trails[2], false, 0, 0, {}, false, 0, TextureType::VENUS, rotation_phase * 0.004},
             {"Earth",   bodies[3].position,  5, {70,140,240},  12, {30,60,120}, trails[3], false, 0, 0, {}, false, 0, TextureType::EARTH, rotation_phase},

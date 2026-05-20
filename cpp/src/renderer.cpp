@@ -194,7 +194,7 @@ Color Renderer::sample_texture(TextureType tex, double u, double v, double phase
         double hot = 0.85 + 0.15 * n;
         double spot = fbm(u * 8.0 + phase, v * 8.0, 3);
         if (spot > 0.5) hot = std::min(1.0, hot * 1.4);
-        return { clamp(255 * hot), clamp(240 * hot), clamp(100 * hot) };
+        return { clamp(255 * hot), clamp(160 * hot), clamp(40 * hot) };
     }
     case TextureType::MERCURY: {
         double n = fbm(u * 10.0 + phase * 0.1, v * 10.0, 4);
