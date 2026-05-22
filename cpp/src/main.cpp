@@ -50,17 +50,39 @@ static std::pair<Vec3f, Vec3f> elements_to_cartesian(const OrbitalElements& oe) 
     return {pos, vel};
 }
 
-static std::vector<Particle> generate_asteroid_belt(uint32_t seed, int count) {
-    std::vector<Particle> particles;
+struct Asteroid {
+    double a, e, angle;
+    Color color;
+};
+
+static std::vector<Asteroid> generate_asteroid_belt(uint32_t seed, int count) {
+    std::vector<Asteroid> asteroids;
     uint32_t state = seed;
     auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
     for (int i = 0; i < count; ++i) {
         double a = (2.1 + (rng() % 10000) / 10000.0 * 1.2) * AU;
         double e = (rng() % 1000) / 10000.0;
         double angle = (rng() % 36000) / 100.0 * DEG;
-        double r = a * (1.0 - e * e) / (1.0 + e * std::cos(angle));
         uint8_t br = 40 + (rng() % 50);
-        particles.push_back({{r * std::cos(angle), r * std::sin(angle), 0}, {br, br, static_cast<uint8_t>(br - 10)}});
+        asteroids.push_back({a, e, angle, {br, br, static_cast<uint8_t>(br - 10)}});
+    }
+    return asteroids;
+}
+
+static void advance_asteroids(std::vector<Asteroid>& asteroids, double dt) {
+    // Kepler's third law: angular velocity = sqrt(G*M_sun / a^3)
+    for (auto& ast : asteroids) {
+        double omega = std::sqrt(G_CONST * M_SUN / (ast.a * ast.a * ast.a));
+        ast.angle += omega * dt;
+    }
+}
+
+static std::vector<Particle> asteroids_to_particles(const std::vector<Asteroid>& asteroids) {
+    std::vector<Particle> particles;
+    particles.reserve(asteroids.size());
+    for (const auto& ast : asteroids) {
+        double r = ast.a * (1.0 - ast.e * ast.e) / (1.0 + ast.e * std::cos(ast.angle));
+        particles.push_back({{r * std::cos(ast.angle), r * std::sin(ast.angle), 0}, ast.color});
     }
     return particles;
 }
@@ -101,6 +123,7 @@ int main(int argc, char* argv[]) {
     orbit_guides.push_back({halley.a, halley.e, halley.i, halley.omega, halley.Omega, {40,60,40}});
 
     auto asteroids = generate_asteroid_belt(12345, 600);
+    double asteroid_time_acc = 0.0;
     std::vector<std::vector<Vec3f>> trails(N);
     OrbitIntegrator integrator;
 
@@ -156,6 +179,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        // Advance asteroids
+        asteroid_time_acc += dt * steps_per_frame;
+        advance_asteroids(asteroids, dt * steps_per_frame);
+
         // Advance rotation phase
         rotation_phase += 0.02;
 
@@ -176,7 +203,8 @@ int main(int argc, char* argv[]) {
         rb[9].is_comet = true; rb[9].tail_length = 30;
 
         // Render
-        renderer.render_frame(rb, orbit_guides, asteroids, legend);
+        auto asteroid_particles = asteroids_to_particles(asteroids);
+        renderer.render_frame(rb, orbit_guides, asteroid_particles, legend);
 
         // Blit to SDL texture
         void* pixels; int pitch;
