@@ -55,12 +55,22 @@ struct Asteroid {
     Color color;
 };
 
+static bool in_kirkwood_gap(double a_au) {
+    static constexpr double gaps[] = {2.06, 2.50, 2.82, 2.95, 3.27};
+    static constexpr double widths[] = {0.02, 0.03, 0.02, 0.02, 0.03};
+    for (int i = 0; i < 5; ++i)
+        if (std::abs(a_au - gaps[i]) < widths[i]) return true;
+    return false;
+}
+
 static std::vector<Asteroid> generate_asteroid_belt(uint32_t seed, int count) {
     std::vector<Asteroid> asteroids;
     uint32_t state = seed;
     auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
-    for (int i = 0; i < count; ++i) {
-        double a = (2.1 + (rng() % 10000) / 10000.0 * 1.2) * AU;
+    while (static_cast<int>(asteroids.size()) < count) {
+        double a_au = 2.1 + (rng() % 10000) / 10000.0 * 1.2;
+        if (in_kirkwood_gap(a_au)) continue;
+        double a = a_au * AU;
         double e = (rng() % 1000) / 10000.0;
         double angle = (rng() % 36000) / 100.0 * DEG;
         uint8_t br = 40 + (rng() % 50);
