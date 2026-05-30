@@ -165,17 +165,25 @@ int main(int argc, char* argv[]) {
     int trail_record = 0;
     double rotation_phase = 0.0;
     bool running = true;
+    bool paused = false;
+    double time_scale = 1.0;
 
     while (running) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) running = false;
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) running = false;
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) running = false;
+                if (event.key.keysym.sym == SDLK_SPACE) paused = !paused;
+                if (event.key.keysym.sym == SDLK_RIGHT) time_scale = std::min(16.0, time_scale * 2.0);
+                if (event.key.keysym.sym == SDLK_LEFT) time_scale = std::max(0.125, time_scale * 0.5);
+            }
         }
 
         // Advance simulation
+        if (!paused) {
         for (int s = 0; s < steps_per_frame; ++s)
-            integrator.step_leapfrog(bodies, dt);
+            integrator.step_leapfrog(bodies, dt * time_scale);
 
         // Record trails every few frames
         trail_record++;
@@ -190,11 +198,11 @@ int main(int argc, char* argv[]) {
         }
 
         // Advance asteroids
-        asteroid_time_acc += dt * steps_per_frame;
-        advance_asteroids(asteroids, dt * steps_per_frame);
+        advance_asteroids(asteroids, dt * time_scale * steps_per_frame);
 
         // Advance rotation phase
-        rotation_phase += 0.02;
+        rotation_phase += 0.02 * time_scale;
+        }
 
         // Build render bodies
         std::vector<RenderBody> rb = {
