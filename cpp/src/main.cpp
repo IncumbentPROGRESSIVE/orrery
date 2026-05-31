@@ -222,7 +222,13 @@ int main(int argc, char* argv[]) {
 
         // Render
         auto asteroid_particles = asteroids_to_particles(asteroids);
-        renderer.render_frame(rb, orbit_guides, asteroid_particles, legend);
+        std::string time_label = paused ? "PAUSED" : (time_scale == 1.0 ? "1x" :
+            (time_scale >= 1.0 ? std::to_string((int)time_scale) + "x" :
+             "1:" + std::to_string((int)(1.0/time_scale))));
+        LegendEntry time_entry{"Speed: " + time_label, {200,200,100}, ""};
+        auto legend_with_time = legend;
+        legend_with_time.push_back(time_entry);
+        renderer.render_frame(rb, orbit_guides, asteroid_particles, legend_with_time);
 
         // Blit to SDL texture
         void* pixels; int pitch;
