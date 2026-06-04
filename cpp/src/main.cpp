@@ -167,6 +167,7 @@ int main(int argc, char* argv[]) {
     bool running = true;
     bool paused = false;
     double time_scale = 1.0;
+    double elapsed_seconds = 0.0;
 
     while (running) {
         SDL_Event event;
@@ -202,6 +203,8 @@ int main(int argc, char* argv[]) {
 
         // Advance rotation phase
         rotation_phase += 0.02 * time_scale;
+
+        elapsed_seconds += dt * time_scale * steps_per_frame;
         }
 
         // Build render bodies
@@ -225,9 +228,14 @@ int main(int argc, char* argv[]) {
         std::string time_label = paused ? "PAUSED" : (time_scale == 1.0 ? "1x" :
             (time_scale >= 1.0 ? std::to_string((int)time_scale) + "x" :
              "1:" + std::to_string((int)(1.0/time_scale))));
-        LegendEntry time_entry{"Speed: " + time_label, {200,200,100}, ""};
+        double days = elapsed_seconds / 86400.0;
+        double years = days / 365.25;
+        std::string elapsed_str = years >= 1.0 ?
+            std::to_string((int)years) + "y " + std::to_string((int)std::fmod(days, 365.25)) + "d" :
+            std::to_string((int)days) + " days";
         auto legend_with_time = legend;
-        legend_with_time.push_back(time_entry);
+        legend_with_time.push_back({"Speed: " + time_label, {200,200,100}, ""});
+        legend_with_time.push_back({"Elapsed: " + elapsed_str, {150,180,200}, ""});
         renderer.render_frame(rb, orbit_guides, asteroid_particles, legend_with_time);
 
         // Blit to SDL texture
