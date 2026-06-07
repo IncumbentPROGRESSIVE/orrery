@@ -113,6 +113,14 @@ int main(int argc, char* argv[]) {
     };
     OrbitalElements halley = {2.682e12, 0.96714, 162.26*DEG, 111.33*DEG, 58.42*DEG, 38.38*DEG, 2.2e14};
 
+    OrbitalElements dwarf_planets[] = {
+        {4.1400e11, 0.0758,  10.59*DEG, 72.52*DEG,  80.33*DEG,  291.4*DEG, 9.393e20},  // Ceres
+        {5.9061e12, 0.2488,  17.16*DEG, 113.83*DEG, 110.30*DEG, 14.53*DEG, 1.303e22},  // Pluto
+        {1.0180e13, 0.4407,  44.04*DEG, 151.64*DEG, 35.87*DEG,  205.99*DEG, 1.66e22},  // Eris
+        {6.4836e12, 0.1590,  28.19*DEG, 241.7*DEG,  79.6*DEG,   218.0*DEG, 4.006e21},  // Haumea
+        {6.7153e12, 0.1559,  29.00*DEG, 296.5*DEG,  136.4*DEG,  165.5*DEG, 3.1e21},    // Makemake
+    };
+
     std::vector<BodyState> bodies;
     bodies.push_back({{0,0,0}, {0,0,0}, M_SUN});
     for (auto& oe : planet_elements) {
@@ -120,8 +128,12 @@ int main(int argc, char* argv[]) {
         bodies.push_back({pos, vel, oe.mass});
     }
     { auto [pos, vel] = elements_to_cartesian(halley); bodies.push_back({pos, vel, halley.mass}); }
+    for (auto& oe : dwarf_planets) {
+        auto [pos, vel] = elements_to_cartesian(oe);
+        bodies.push_back({pos, vel, oe.mass});
+    }
 
-    constexpr int N = 10;
+    constexpr int N = 15;
 
     // Orbit guides
     std::vector<OrbitGuide> orbit_guides;
@@ -131,6 +143,11 @@ int main(int argc, char* argv[]) {
         orbit_guides.push_back({oe.a, oe.e, oe.i, oe.omega, oe.Omega, orbit_colors[i]});
     }
     orbit_guides.push_back({halley.a, halley.e, halley.i, halley.omega, halley.Omega, {40,60,40}});
+    Color dwarf_orbit_colors[] = {{80,80,60},{140,120,100},{100,100,120},{120,90,90},{110,100,80}};
+    for (int i = 0; i < 5; ++i) {
+        auto& oe = dwarf_planets[i];
+        orbit_guides.push_back({oe.a, oe.e, oe.i, oe.omega, oe.Omega, dwarf_orbit_colors[i]});
+    }
 
     auto asteroids = generate_asteroid_belt(12345, 600);
     double asteroid_time_acc = 0.0;
@@ -148,6 +165,11 @@ int main(int argc, char* argv[]) {
         {"Uranus",  {150,220,230}, "19.2 AU"},
         {"Neptune", {60,100,220},  "30.1 AU"},
         {"Halley",  {180,220,180}, "e=0.967"},
+        {"Ceres",   {180,170,150}, "2.77 AU"},
+        {"Pluto",   {200,180,150}, "39.5 AU"},
+        {"Eris",    {210,210,220}, "67.8 AU"},
+        {"Haumea",  {200,160,150}, "43.3 AU"},
+        {"Makemake",{190,170,140}, "45.8 AU"},
     };
 
     Renderer renderer(W, H, 5.5e12);
@@ -219,6 +241,11 @@ int main(int argc, char* argv[]) {
             {"Uranus",  bodies[7].position,  6, {150,220,230}, 14, {60,100,110}, trails[7], false, 0, 0, {}, false, 0, TextureType::URANUS, rotation_phase * 1.4},
             {"Neptune", bodies[8].position,  6, {60,100,220},  14, {25,45,100}, trails[8], false, 0, 0, {}, false, 0, TextureType::NEPTUNE, rotation_phase * 1.5},
             {"Halley",  bodies[9].position,  2, {180,220,180},  4, {60,90,60}, trails[9], false, 0, 0, {}, false, 0, TextureType::COMET, 0},
+            {"Ceres",   bodies[10].position, 2, {180,170,150},  4, {80,75,65}, trails[10], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
+            {"Pluto",   bodies[11].position, 3, {200,180,150},  6, {100,85,70}, trails[11], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
+            {"Eris",    bodies[12].position, 3, {210,210,220},  6, {90,90,100}, trails[12], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
+            {"Haumea",  bodies[13].position, 2, {200,160,150},  4, {90,70,65}, trails[13], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
+            {"Makemake",bodies[14].position, 2, {190,170,140},  4, {85,75,60}, trails[14], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
         };
         rb[6].has_ring = true; rb[6].ring_inner = 12; rb[6].ring_outer = 20; rb[6].ring_color = {200,180,130};
         rb[9].is_comet = true; rb[9].tail_length = 30;
