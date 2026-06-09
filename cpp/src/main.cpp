@@ -173,6 +173,7 @@ int main(int argc, char* argv[]) {
     };
 
     Renderer renderer(W, H, 5.5e12);
+    double zoom = 1.0;
 
     // SDL init
     SDL_Init(SDL_INIT_VIDEO);
@@ -200,6 +201,11 @@ int main(int argc, char* argv[]) {
                 if (event.key.keysym.sym == SDLK_SPACE) paused = !paused;
                 if (event.key.keysym.sym == SDLK_RIGHT) time_scale = std::min(16.0, time_scale * 2.0);
                 if (event.key.keysym.sym == SDLK_LEFT) time_scale = std::max(0.125, time_scale * 0.5);
+            }
+            if (event.type == SDL_MOUSEWHEEL) {
+                if (event.wheel.y > 0) zoom = std::min(32.0, zoom * 1.3);
+                if (event.wheel.y < 0) zoom = std::max(0.2, zoom / 1.3);
+                renderer = Renderer(W, H, 5.5e12 / zoom);
             }
         }
 
