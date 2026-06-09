@@ -150,6 +150,29 @@ int main(int argc, char* argv[]) {
     }
 
     auto asteroids = generate_asteroid_belt(12345, 600);
+
+    // Trojan asteroids at Jupiter's L4/L5
+    auto generate_trojans = [&](uint32_t seed, int count, double jupiter_angle_offset) {
+        std::vector<Asteroid> trojans;
+        uint32_t state = seed;
+        auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
+        double jup_a = 7.7857e11;
+        for (int i = 0; i < count; ++i) {
+            double a = jup_a * (0.95 + (rng() % 1000) / 10000.0);
+            double e = (rng() % 500) / 10000.0;
+            double base_angle = jupiter_angle_offset + ((rng() % 2000) - 1000) / 1000.0 * 0.2;
+            uint8_t br = 50 + (rng() % 40);
+            trojans.push_back({a, e, base_angle, {br, static_cast<uint8_t>(br - 5), static_cast<uint8_t>(br - 15)}});
+        }
+        return trojans;
+    };
+
+    // Get Jupiter's initial angle for L4/L5 placement
+    double jup_angle = std::atan2(bodies[5].position.y, bodies[5].position.x);
+    auto trojans_l4 = generate_trojans(99999, 80, jup_angle + PI / 3.0);
+    auto trojans_l5 = generate_trojans(77777, 80, jup_angle - PI / 3.0);
+    asteroids.insert(asteroids.end(), trojans_l4.begin(), trojans_l4.end());
+    asteroids.insert(asteroids.end(), trojans_l5.begin(), trojans_l5.end());
     double asteroid_time_acc = 0.0;
     std::vector<std::vector<Vec3f>> trails(N);
     OrbitIntegrator integrator;
