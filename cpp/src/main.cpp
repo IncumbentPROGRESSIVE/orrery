@@ -173,6 +173,23 @@ int main(int argc, char* argv[]) {
     auto trojans_l5 = generate_trojans(77777, 80, jup_angle - PI / 3.0);
     asteroids.insert(asteroids.end(), trojans_l4.begin(), trojans_l4.end());
     asteroids.insert(asteroids.end(), trojans_l5.begin(), trojans_l5.end());
+
+    // Kuiper belt: icy bodies from 30-50 AU
+    auto generate_kuiper = [&](uint32_t seed, int count) {
+        std::vector<Asteroid> belt;
+        uint32_t state = seed;
+        auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
+        for (int i = 0; i < count; ++i) {
+            double a = (30.0 + (rng() % 10000) / 10000.0 * 20.0) * AU;
+            double e = (rng() % 1500) / 10000.0;
+            double angle = (rng() % 36000) / 100.0 * DEG;
+            uint8_t br = 25 + (rng() % 35);
+            belt.push_back({a, e, angle, {static_cast<uint8_t>(br - 5), br, static_cast<uint8_t>(br + 10)}});
+        }
+        return belt;
+    };
+    auto kuiper = generate_kuiper(54321, 400);
+    asteroids.insert(asteroids.end(), kuiper.begin(), kuiper.end());
     double asteroid_time_acc = 0.0;
     std::vector<std::vector<Vec3f>> trails(N);
     OrbitIntegrator integrator;
