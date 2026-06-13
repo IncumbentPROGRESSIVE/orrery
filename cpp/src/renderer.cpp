@@ -153,6 +153,24 @@ void Renderer::generate_starfield(uint32_t seed) {
     uint32_t state = seed;
     auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
 
+    // Background nebula
+    for (int y = 0; y < height_; y += 2) {
+        for (int x = 0; x < width_; x += 2) {
+            double nx = x / (double)width_, ny = y / (double)height_;
+            double n1 = fbm(nx * 3.0 + 1.2, ny * 3.0 + 0.8, 4) * 0.5 + 0.5;
+            double n2 = fbm(nx * 2.5 + 5.0, ny * 2.5 + 3.0, 3) * 0.5 + 0.5;
+            double intensity = n1 * n1 * 0.08;
+            double r = intensity * 40 * n2;
+            double g = intensity * 20;
+            double b = intensity * 60 * (1.0 - n2 * 0.5);
+            Color nc{static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b)};
+            set_pixel_additive(x, y, nc);
+            set_pixel_additive(x+1, y, nc);
+            set_pixel_additive(x, y+1, nc);
+            set_pixel_additive(x+1, y+1, nc);
+        }
+    }
+
     int num_stars = (width_ * height_) / 80;
     for (int i = 0; i < num_stars; ++i) {
         int x = rng() % width_, y = rng() % height_;
