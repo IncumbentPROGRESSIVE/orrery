@@ -256,7 +256,8 @@ int main(int argc, char* argv[]) {
 
         // Record trails every few frames
         trail_record++;
-        if (trail_record % 2 == 0) {
+        int record_interval = std::max(1, (int)(2.0 / time_scale));
+        if (trail_record % record_interval == 0) {
             for (int i = 0; i < N; ++i) {
                 trails[i].push_back(bodies[i].position);
                 // Inner planets (Mercury-Mars): 300 points is fine
