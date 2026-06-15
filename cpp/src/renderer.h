@@ -69,6 +69,7 @@ struct LegendEntry {
 class Renderer {
 public:
     Renderer(int width, int height, double max_radius);
+    void set_pan(double px, double py) { pan_x_ = px; pan_y_ = py; }
     void render_frame(
         const std::vector<RenderBody>& bodies,
         const std::vector<OrbitGuide>& orbits = {},
@@ -83,6 +84,7 @@ public:
 private:
     int width_, height_;
     double max_radius_, pixel_radius_;
+    double pan_x_ = 0.0, pan_y_ = 0.0;
     std::vector<uint8_t> framebuffer_;
 
     void clear();

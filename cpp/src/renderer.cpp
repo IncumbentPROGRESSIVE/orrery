@@ -199,7 +199,7 @@ Vec3f Renderer::sqrt_warp(const Vec3f& pos) const {
 
 std::pair<int,int> Renderer::project(const Vec3f& pos) const {
     Vec3f w = sqrt_warp(pos);
-    return { static_cast<int>(w.x + width_ / 2.0), static_cast<int>(-w.y + height_ / 2.0) };
+    return { static_cast<int>(w.x + width_ / 2.0 + pan_x_), static_cast<int>(-w.y + height_ / 2.0 + pan_y_) };
 }
 
 // Procedural texture sampling

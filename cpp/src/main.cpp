@@ -214,6 +214,10 @@ int main(int argc, char* argv[]) {
 
     Renderer renderer(W, H, 5.5e12);
     double zoom = 1.0;
+    double pan_x = 0.0, pan_y = 0.0;
+    bool dragging = false;
+    int drag_start_x = 0, drag_start_y = 0;
+    double drag_start_pan_x = 0.0, drag_start_pan_y = 0.0;
 
     // SDL init
     SDL_Init(SDL_INIT_VIDEO);
@@ -246,6 +250,22 @@ int main(int argc, char* argv[]) {
                 if (event.wheel.y > 0) zoom = std::min(32.0, zoom * 1.3);
                 if (event.wheel.y < 0) zoom = std::max(0.2, zoom / 1.3);
                 renderer = Renderer(W, H, 5.5e12 / zoom);
+                renderer.set_pan(pan_x, pan_y);
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                dragging = true;
+                drag_start_x = event.button.x;
+                drag_start_y = event.button.y;
+                drag_start_pan_x = pan_x;
+                drag_start_pan_y = pan_y;
+            }
+            if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+                dragging = false;
+            }
+            if (event.type == SDL_MOUSEMOTION && dragging) {
+                pan_x = drag_start_pan_x + (event.motion.x - drag_start_x);
+                pan_y = drag_start_pan_y + (event.motion.y - drag_start_y);
+                renderer.set_pan(pan_x, pan_y);
             }
         }
 
