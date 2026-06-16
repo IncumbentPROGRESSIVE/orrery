@@ -218,6 +218,7 @@ int main(int argc, char* argv[]) {
     bool dragging = false;
     int drag_start_x = 0, drag_start_y = 0;
     double drag_start_pan_x = 0.0, drag_start_pan_y = 0.0;
+    int follow_body = -1; // -1 = no follow, index into rb
 
     // SDL init
     SDL_Init(SDL_INIT_VIDEO);
@@ -253,11 +254,24 @@ int main(int argc, char* argv[]) {
                 renderer.set_pan(pan_x, pan_y);
             }
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-                dragging = true;
-                drag_start_x = event.button.x;
-                drag_start_y = event.button.y;
-                drag_start_pan_x = pan_x;
-                drag_start_pan_y = pan_y;
+                if (event.button.clicks == 2) {
+                    // Double-click: find nearest body
+                    int mx = event.button.x, my = event.button.y;
+                    int best = -1; double best_dist = 40.0;
+                    for (int i = 0; i < (int)bodies.size(); ++i) {
+                        auto [sx, sy] = renderer.project_public(bodies[i].position);
+                        double d = std::sqrt((mx-sx)*(mx-sx) + (my-sy)*(my-sy));
+                        if (d < best_dist) { best_dist = d; best = i; }
+                    }
+                    follow_body = best;
+                } else {
+                    dragging = true;
+                    drag_start_x = event.button.x;
+                    drag_start_y = event.button.y;
+                    drag_start_pan_x = pan_x;
+                    drag_start_pan_y = pan_y;
+                    follow_body = -1;
+                }
             }
             if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
                 dragging = false;
@@ -294,6 +308,19 @@ int main(int argc, char* argv[]) {
         rotation_phase += 0.02 * time_scale;
 
         elapsed_seconds += dt * time_scale * steps_per_frame;
+        }
+
+        // Follow body: update pan to keep it centered
+        if (follow_body >= 0 && follow_body < (int)bodies.size()) {
+            Vec3f w = bodies[follow_body].position;
+            double r = w.magnitude();
+            if (r > 0) {
+                double warped = std::sqrt(r / (5.5e12 / zoom)) * (std::min(W, H) * 0.45);
+                Vec3f n = w.normalized();
+                pan_x = -(n.x * warped);
+                pan_y = (n.y * warped);
+                renderer.set_pan(pan_x, pan_y);
+            }
         }
 
         // Build render bodies

@@ -108,7 +108,10 @@ static const uint8_t FONT_5X7[][7] = {
 Renderer::Renderer(int width, int height, double max_radius)
     : width_(width), height_(height), max_radius_(max_radius),
       pixel_radius_(std::min(width, height) * 0.45),
-      framebuffer_(width * height * 3, 0) {}
+      framebuffer_(width * height * 3, 0),
+      background_(width * height * 3, 0) {
+    generate_background();
+}
 
 bool Renderer::in_bounds(int x, int y) const {
     return x >= 0 && x < width_ && y >= 0 && y < height_;
@@ -144,33 +147,39 @@ Color Renderer::get_pixel(int x, int y) const {
 }
 
 void Renderer::clear() {
-    for (int i = 0; i < width_ * height_; ++i) {
-        framebuffer_[i*3] = 2; framebuffer_[i*3+1] = 2; framebuffer_[i*3+2] = 8;
-    }
+    memcpy(framebuffer_.data(), background_.data(), framebuffer_.size());
 }
 
-void Renderer::generate_starfield(uint32_t seed) {
-    uint32_t state = seed;
-    auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
-
-    // Background nebula
+void Renderer::generate_background() {
+    for (int i = 0; i < width_ * height_; ++i) {
+        background_[i*3] = 2; background_[i*3+1] = 2; background_[i*3+2] = 8;
+    }
+    // Nebula
     for (int y = 0; y < height_; y += 2) {
         for (int x = 0; x < width_; x += 2) {
             double nx = x / (double)width_, ny = y / (double)height_;
             double n1 = fbm(nx * 3.0 + 1.2, ny * 3.0 + 0.8, 4) * 0.5 + 0.5;
             double n2 = fbm(nx * 2.5 + 5.0, ny * 2.5 + 3.0, 3) * 0.5 + 0.5;
             double intensity = n1 * n1 * 0.08;
-            double r = intensity * 40 * n2;
-            double g = intensity * 20;
-            double b = intensity * 60 * (1.0 - n2 * 0.5);
-            Color nc{static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b)};
-            set_pixel_additive(x, y, nc);
-            set_pixel_additive(x+1, y, nc);
-            set_pixel_additive(x, y+1, nc);
-            set_pixel_additive(x+1, y+1, nc);
+            uint8_t r = static_cast<uint8_t>(intensity * 40 * n2);
+            uint8_t g = static_cast<uint8_t>(intensity * 20);
+            uint8_t b = static_cast<uint8_t>(intensity * 60 * (1.0 - n2 * 0.5));
+            for (int dy = 0; dy < 2; ++dy) {
+                for (int dx = 0; dx < 2; ++dx) {
+                    int px = x+dx, py = y+dy;
+                    if (px < width_ && py < height_) {
+                        int idx = (py * width_ + px) * 3;
+                        background_[idx]   = std::min(255, background_[idx]   + r);
+                        background_[idx+1] = std::min(255, background_[idx+1] + g);
+                        background_[idx+2] = std::min(255, background_[idx+2] + b);
+                    }
+                }
+            }
         }
     }
-
+    // Stars
+    uint32_t state = 42;
+    auto rng = [&]() -> uint32_t { state = state * 1664525u + 1013904223u; return state; };
     int num_stars = (width_ * height_) / 80;
     for (int i = 0; i < num_stars; ++i) {
         int x = rng() % width_, y = rng() % height_;
@@ -180,14 +189,25 @@ void Renderer::generate_starfield(uint32_t seed) {
         if (tint == 0) { r = std::min(255, r + 35); b = std::max(0, b - 20); }
         if (tint == 1) { b = std::min(255, b + 45); r = std::max(0, r - 15); }
         if (tint == 2) { r = std::min(255, r + 20); g = std::min(255, g + 15); }
-        set_pixel(x, y, {r, g, b});
+        int idx = (y * width_ + x) * 3;
+        background_[idx] = r; background_[idx+1] = g; background_[idx+2] = b;
         if (br > 170 && (rng() % 4 == 0)) {
             uint8_t dim = br / 4;
-            Color dc{dim, dim, dim};
-            set_pixel_additive(x-1, y, dc); set_pixel_additive(x+1, y, dc);
-            set_pixel_additive(x, y-1, dc); set_pixel_additive(x, y+1, dc);
+            auto add_star = [&](int sx, int sy) {
+                if (sx >= 0 && sx < width_ && sy >= 0 && sy < height_) {
+                    int si = (sy * width_ + sx) * 3;
+                    background_[si]   = std::min(255, background_[si]   + dim);
+                    background_[si+1] = std::min(255, background_[si+1] + dim);
+                    background_[si+2] = std::min(255, background_[si+2] + dim);
+                }
+            };
+            add_star(x-1, y); add_star(x+1, y); add_star(x, y-1); add_star(x, y+1);
         }
     }
+}
+
+void Renderer::generate_starfield(uint32_t seed) {
+    // Now a no-op, background is pre-cached
 }
 
 Vec3f Renderer::sqrt_warp(const Vec3f& pos) const {

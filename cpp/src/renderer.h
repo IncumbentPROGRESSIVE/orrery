@@ -70,6 +70,7 @@ class Renderer {
 public:
     Renderer(int width, int height, double max_radius);
     void set_pan(double px, double py) { pan_x_ = px; pan_y_ = py; }
+    std::pair<int,int> project_public(const Vec3f& pos) const { return project(pos); }
     void render_frame(
         const std::vector<RenderBody>& bodies,
         const std::vector<OrbitGuide>& orbits = {},
@@ -86,8 +87,10 @@ private:
     double max_radius_, pixel_radius_;
     double pan_x_ = 0.0, pan_y_ = 0.0;
     std::vector<uint8_t> framebuffer_;
+    std::vector<uint8_t> background_;
 
     void clear();
+    void generate_background();
     void generate_starfield(uint32_t seed);
     void set_pixel(int x, int y, const Color& c);
     void set_pixel_blend(int x, int y, const Color& c, double alpha);
