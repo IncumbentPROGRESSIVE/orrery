@@ -246,6 +246,10 @@ int main(int argc, char* argv[]) {
                 if (event.key.keysym.sym == SDLK_SPACE) paused = !paused;
                 if (event.key.keysym.sym == SDLK_RIGHT) time_scale = std::min(16.0, time_scale * 2.0);
                 if (event.key.keysym.sym == SDLK_LEFT) time_scale = std::max(0.125, time_scale * 0.5);
+                if (event.key.keysym.sym == SDLK_r) {
+                    zoom = 1.0; pan_x = 0.0; pan_y = 0.0; follow_body = -1;
+                    renderer = Renderer(W, H, 5.5e12);
+                }
             }
             if (event.type == SDL_MOUSEWHEEL) {
                 if (event.wheel.y > 0) zoom = std::min(32.0, zoom * 1.3);
