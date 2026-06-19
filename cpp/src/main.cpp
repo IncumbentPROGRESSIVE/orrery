@@ -236,6 +236,7 @@ int main(int argc, char* argv[]) {
     bool paused = false;
     double time_scale = 1.0;
     double elapsed_seconds = 0.0;
+    bool show_help = false;
 
     while (running) {
         SDL_Event event;
@@ -250,6 +251,7 @@ int main(int argc, char* argv[]) {
                     zoom = 1.0; pan_x = 0.0; pan_y = 0.0; follow_body = -1;
                     renderer = Renderer(W, H, 5.5e12);
                 }
+                if (event.key.keysym.sym == SDLK_h) show_help = !show_help;
             }
             if (event.type == SDL_MOUSEWHEEL) {
                 if (event.wheel.y > 0) zoom = std::min(32.0, zoom * 1.3);
@@ -361,6 +363,19 @@ int main(int argc, char* argv[]) {
         auto legend_with_time = legend;
         legend_with_time.push_back({"Speed: " + time_label, {200,200,100}, ""});
         legend_with_time.push_back({"Elapsed: " + elapsed_str, {150,180,200}, ""});
+        if (show_help) {
+            legend_with_time.push_back({"", {0,0,0}, ""});
+            legend_with_time.push_back({"Controls:", {180,180,200}, ""});
+            legend_with_time.push_back({"Space", {150,150,170}, "pause"});
+            legend_with_time.push_back({"Left:Right", {150,150,170}, "speed"});
+            legend_with_time.push_back({"Scroll", {150,150,170}, "zoom"});
+            legend_with_time.push_back({"Drag", {150,150,170}, "pan"});
+            legend_with_time.push_back({"Dbl-click", {150,150,170}, "follow"});
+            legend_with_time.push_back({"R", {150,150,170}, "reset"});
+            legend_with_time.push_back({"H", {150,150,170}, "help"});
+        } else {
+            legend_with_time.push_back({"H for help", {100,100,120}, ""});
+        }
         renderer.render_frame(rb, orbit_guides, asteroid_particles, legend_with_time);
 
         // Blit to SDL texture
