@@ -262,6 +262,7 @@ int main(int argc, char* argv[]) {
     double time_scale = 1.0;
     double elapsed_seconds = 0.0;
     bool show_help = false;
+    bool show_orbits = true;
 
     while (running) {
         SDL_Event event;
@@ -277,6 +278,7 @@ int main(int argc, char* argv[]) {
                     renderer = Renderer(W, H, 5.5e12);
                 }
                 if (event.key.keysym.sym == SDLK_h) show_help = !show_help;
+                if (event.key.keysym.sym == SDLK_o) show_orbits = !show_orbits;
             }
             if (event.type == SDL_MOUSEWHEEL) {
                 if (event.wheel.y > 0) zoom = std::min(32.0, zoom * 1.3);
@@ -447,11 +449,12 @@ int main(int argc, char* argv[]) {
             legend_with_time.push_back({"Drag", {150,150,170}, "pan"});
             legend_with_time.push_back({"Dbl-click", {150,150,170}, "follow"});
             legend_with_time.push_back({"R", {150,150,170}, "reset"});
+            legend_with_time.push_back({"O", {150,150,170}, "orbits"});
             legend_with_time.push_back({"H", {150,150,170}, "help"});
         } else {
             legend_with_time.push_back({"H for help", {100,100,120}, ""});
         }
-        renderer.render_frame(rb, orbit_guides, asteroid_particles, legend_with_time);
+        renderer.render_frame(rb, show_orbits ? orbit_guides : std::vector<OrbitGuide>{}, asteroid_particles, legend_with_time);
 
         // Blit to SDL texture
         void* pixels; int pitch;
