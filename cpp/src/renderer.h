@@ -71,6 +71,11 @@ public:
     Renderer(int width, int height, double max_radius);
     void set_pan(double px, double py) { pan_x_ = px; pan_y_ = py; }
     std::pair<int,int> project_public(const Vec3f& pos) const { return project(pos); }
+    void draw_label_public(const Vec3f& pos, const std::string& name, int radius, bool has_ring, int ring_outer) {
+        auto [sx, sy] = project(pos);
+        int offset = (has_ring ? ring_outer : radius) + 4;
+        draw_label(sx + offset, sy - 3, name, {190, 190, 200});
+    }
     void render_frame(
         const std::vector<RenderBody>& bodies,
         const std::vector<OrbitGuide>& orbits = {},

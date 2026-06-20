@@ -135,6 +135,31 @@ int main(int argc, char* argv[]) {
 
     constexpr int N = 15;
 
+    // Jupiter's Galilean moons - orbital radii and periods
+    struct Moon {
+        std::string name;
+        double orbital_radius; // meters from Jupiter
+        double period;         // seconds
+        double angle;          // current angle
+        Color color;
+    };
+    std::vector<Moon> jupiter_moons = {
+        {"Io",       4.218e8,  1.769*86400.0, 0.0,      {220,200,100}},
+        {"Europa",   6.711e8,  3.551*86400.0, PI*0.5,   {180,170,150}},
+        {"Ganymede", 1.0704e9, 7.155*86400.0, PI,       {160,150,130}},
+        {"Callisto", 1.8827e9, 16.69*86400.0, PI*1.5,   {120,110,100}},
+    };
+
+    std::vector<Moon> earth_moons = {
+        {"Moon",     3.844e8,  27.32*86400.0, 0.0,      {200,200,200}},
+    };
+
+    std::vector<Moon> saturn_moons = {
+        {"Enceladus", 2.38e8,  1.370*86400.0, 0.0,      {220,230,240}},
+        {"Rhea",      5.27e8,  4.518*86400.0, PI*0.7,   {180,175,170}},
+        {"Titan",     1.222e9, 15.95*86400.0, PI*1.2,   {210,180,100}},
+    };
+
     // Orbit guides
     std::vector<OrbitGuide> orbit_guides;
     Color orbit_colors[] = {{60,60,60},{80,70,50},{40,60,100},{90,50,25},{80,65,40},{80,70,50},{50,80,85},{30,45,90}};
@@ -310,6 +335,19 @@ int main(int argc, char* argv[]) {
         // Advance asteroids
         advance_asteroids(asteroids, dt * time_scale * steps_per_frame);
 
+        // Advance Jupiter moons
+        for (auto& moon : jupiter_moons) {
+            moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
+        }
+        // Advance Earth moon
+        for (auto& moon : earth_moons) {
+            moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
+        }
+        // Advance Saturn moons
+        for (auto& moon : saturn_moons) {
+            moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
+        }
+
         // Advance rotation phase
         rotation_phase += 0.02 * time_scale;
 
@@ -349,6 +387,43 @@ int main(int argc, char* argv[]) {
         };
         rb[6].has_ring = true; rb[6].ring_inner = 12; rb[6].ring_outer = 20; rb[6].ring_color = {200,180,130};
         rb[9].is_comet = true; rb[9].tail_length = 30;
+
+        // Add Jupiter's moons
+        Vec3f jup_pos = bodies[5].position;
+        for (int mi = 0; mi < (int)jupiter_moons.size(); ++mi) {
+            const auto& moon = jupiter_moons[mi];
+            Vec3f moon_pos = jup_pos + Vec3f{
+                moon.orbital_radius * std::cos(moon.angle),
+                moon.orbital_radius * std::sin(moon.angle),
+                0
+            };
+            std::string label = (zoom >= 8.0) ? moon.name : "";
+            rb.push_back({label, moon_pos, 2, moon.color, 3, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
+        }
+
+        // Add Earth's Moon
+        Vec3f earth_pos = bodies[3].position;
+        for (const auto& moon : earth_moons) {
+            Vec3f moon_pos = earth_pos + Vec3f{
+                moon.orbital_radius * std::cos(moon.angle),
+                moon.orbital_radius * std::sin(moon.angle),
+                0
+            };
+            std::string label = (zoom >= 8.0) ? moon.name : "";
+            rb.push_back({label, moon_pos, 2, moon.color, 3, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
+        }
+
+        // Add Saturn's moons
+        Vec3f sat_pos = bodies[6].position;
+        for (const auto& moon : saturn_moons) {
+            Vec3f moon_pos = sat_pos + Vec3f{
+                moon.orbital_radius * std::cos(moon.angle),
+                moon.orbital_radius * std::sin(moon.angle),
+                0
+            };
+            std::string label = (zoom >= 8.0) ? moon.name : "";
+            rb.push_back({label, moon_pos, 2, moon.color, 3, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
+        }
 
         // Render
         auto asteroid_particles = asteroids_to_particles(asteroids);
