@@ -166,6 +166,10 @@ int main(int argc, char* argv[]) {
         {"Deimos",  2.346e7,  1.263*86400.0, PI*0.8,    {170,160,150}},
     };
 
+    std::vector<Moon> neptune_moons = {
+        {"Triton",  3.548e8,  -5.877*86400.0, 0.0,      {150,180,210}},  // negative period = retrograde
+    };
+
     // Orbit guides
     std::vector<OrbitGuide> orbit_guides;
     Color orbit_colors[] = {{60,60,60},{80,70,50},{40,60,100},{90,50,25},{80,65,40},{80,70,50},{50,80,85},{30,45,90}};
@@ -360,6 +364,10 @@ int main(int argc, char* argv[]) {
         for (auto& moon : mars_moons) {
             moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
         }
+        // Advance Neptune moons
+        for (auto& moon : neptune_moons) {
+            moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
+        }
 
         // Advance rotation phase
         rotation_phase += 0.02 * time_scale;
@@ -449,6 +457,18 @@ int main(int argc, char* argv[]) {
             };
             std::string label = (zoom >= 8.0) ? moon.name : "";
             rb.push_back({label, moon_pos, 1, moon.color, 2, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
+        }
+
+        // Add Neptune's moon (Triton - retrograde)
+        Vec3f nep_pos = bodies[8].position;
+        for (const auto& moon : neptune_moons) {
+            Vec3f moon_pos = nep_pos + Vec3f{
+                moon.orbital_radius * std::cos(moon.angle),
+                moon.orbital_radius * std::sin(moon.angle),
+                0
+            };
+            std::string label = (zoom >= 8.0) ? moon.name : "";
+            rb.push_back({label, moon_pos, 2, moon.color, 3, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
         }
 
         // Render
