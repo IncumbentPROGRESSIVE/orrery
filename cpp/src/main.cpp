@@ -274,6 +274,7 @@ int main(int argc, char* argv[]) {
     double elapsed_seconds = 0.0;
     bool show_help = false;
     bool show_orbits = true;
+    uint32_t comet_seed = 31415;
 
     while (running) {
         SDL_Event event;
@@ -290,6 +291,20 @@ int main(int argc, char* argv[]) {
                 }
                 if (event.key.keysym.sym == SDLK_h) show_help = !show_help;
                 if (event.key.keysym.sym == SDLK_o) show_orbits = !show_orbits;
+                if (event.key.keysym.sym == SDLK_c) {
+                    // Spawn a random comet
+                    auto rng_c = [&]() -> uint32_t { comet_seed = comet_seed * 1664525u + 1013904223u; return comet_seed; };
+                    double a = (3.0 + (rng_c() % 10000) / 10000.0 * 15.0) * AU;
+                    double e = 0.85 + (rng_c() % 1000) / 10000.0;
+                    double i = (rng_c() % 3000) / 100.0 * DEG;
+                    double omega = (rng_c() % 36000) / 100.0 * DEG;
+                    double Omega = (rng_c() % 36000) / 100.0 * DEG;
+                    double M0 = (rng_c() % 36000) / 100.0 * DEG;
+                    OrbitalElements ce{a, e, i, omega, Omega, M0, 1e12};
+                    auto [pos, vel] = elements_to_cartesian(ce);
+                    bodies.push_back({pos, vel, ce.mass});
+                    trails.push_back({});
+                }
             }
             if (event.type == SDL_MOUSEWHEEL) {
                 if (event.wheel.y > 0) zoom = std::min(32.0, zoom * 1.3);
@@ -336,10 +351,9 @@ int main(int argc, char* argv[]) {
         trail_record++;
         int record_interval = std::max(1, (int)(2.0 / time_scale));
         if (trail_record % record_interval == 0) {
-            for (int i = 0; i < N; ++i) {
+            for (int i = 0; i < (int)trails.size(); ++i) {
+                if (i >= (int)bodies.size()) break;
                 trails[i].push_back(bodies[i].position);
-                // Inner planets (Mercury-Mars): 300 points is fine
-                // Outer planets (Jupiter+) and Halley: keep much longer trails
                 size_t max_trail = (i >= 5) ? 3000 : 300;
                 if (trails[i].size() > max_trail) trails[i].erase(trails[i].begin());
             }
@@ -409,6 +423,12 @@ int main(int argc, char* argv[]) {
         };
         rb[6].has_ring = true; rb[6].ring_inner = 12; rb[6].ring_outer = 20; rb[6].ring_color = {200,180,130};
         rb[9].is_comet = true; rb[9].tail_length = 30;
+
+        // Add spawned comets
+        for (int i = N; i < (int)bodies.size(); ++i) {
+            std::vector<Vec3f> t = (i < (int)trails.size()) ? trails[i] : std::vector<Vec3f>{};
+            rb.push_back({"Comet", bodies[i].position, 2, {140,220,140}, 4, {50,90,50}, t, false, 0, 0, {}, true, 20, TextureType::COMET, 0});
+        }
 
         // Add Jupiter's moons
         Vec3f jup_pos = bodies[5].position;
@@ -494,6 +514,7 @@ int main(int argc, char* argv[]) {
             legend_with_time.push_back({"Dbl-click", {150,150,170}, "follow"});
             legend_with_time.push_back({"R", {150,150,170}, "reset"});
             legend_with_time.push_back({"O", {150,150,170}, "orbits"});
+            legend_with_time.push_back({"C", {150,150,170}, "comet"});
             legend_with_time.push_back({"H", {150,150,170}, "help"});
         } else {
             legend_with_time.push_back({"H for help", {100,100,120}, ""});
