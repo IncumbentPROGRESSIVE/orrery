@@ -322,7 +322,7 @@ int main(int argc, char* argv[]) {
             }
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 if (event.button.clicks == 2) {
-                    // Double-click: find nearest body
+                    // Double-click: find nearest body and zoom in
                     int mx = event.button.x, my = event.button.y;
                     int best = -1; double best_dist = 40.0;
                     for (int i = 0; i < (int)bodies.size(); ++i) {
@@ -331,6 +331,11 @@ int main(int argc, char* argv[]) {
                         if (d < best_dist) { best_dist = d; best = i; }
                     }
                     follow_body = best;
+                    if (follow_body >= 0) {
+                        zoom = std::max(zoom, 16.0);
+                        renderer = Renderer(W, H, 5.5e12 / zoom);
+                        renderer.set_pan(pan_x, pan_y);
+                    }
                 } else {
                     dragging = true;
                     drag_start_x = event.button.x;
