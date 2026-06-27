@@ -170,6 +170,14 @@ int main(int argc, char* argv[]) {
         {"Triton",  3.548e8,  -5.877*86400.0, 0.0,      {150,180,210}},  // negative period = retrograde
     };
 
+    std::vector<Moon> uranus_moons = {
+        {"Miranda", 1.299e8,  1.413*86400.0, 0.0,       {180,180,190}},
+        {"Ariel",   1.909e8,  2.520*86400.0, PI*0.4,    {190,190,200}},
+        {"Umbriel", 2.660e8,  4.144*86400.0, PI*0.9,    {150,150,160}},
+        {"Titania", 4.363e8,  8.706*86400.0, PI*1.3,    {170,170,180}},
+        {"Oberon",  5.835e8,  13.46*86400.0, PI*1.7,    {160,155,150}},
+    };
+
     // Orbit guides
     std::vector<OrbitGuide> orbit_guides;
     Color orbit_colors[] = {{60,60,60},{80,70,50},{40,60,100},{90,50,25},{80,65,40},{80,70,50},{50,80,85},{30,45,90}};
@@ -382,6 +390,10 @@ int main(int argc, char* argv[]) {
         for (auto& moon : neptune_moons) {
             moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
         }
+        // Advance Uranus moons
+        for (auto& moon : uranus_moons) {
+            moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
+        }
 
         // Advance rotation phase
         rotation_phase += 0.02 * time_scale;
@@ -483,6 +495,18 @@ int main(int argc, char* argv[]) {
         Vec3f nep_pos = bodies[8].position;
         for (const auto& moon : neptune_moons) {
             Vec3f moon_pos = nep_pos + Vec3f{
+                moon.orbital_radius * std::cos(moon.angle),
+                moon.orbital_radius * std::sin(moon.angle),
+                0
+            };
+            std::string label = (zoom >= 8.0) ? moon.name : "";
+            rb.push_back({label, moon_pos, 2, moon.color, 3, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
+        }
+
+        // Add Uranus's moons
+        Vec3f ura_pos = bodies[7].position;
+        for (const auto& moon : uranus_moons) {
+            Vec3f moon_pos = ura_pos + Vec3f{
                 moon.orbital_radius * std::cos(moon.angle),
                 moon.orbital_radius * std::sin(moon.angle),
                 0
