@@ -4,41 +4,96 @@ A multi-language celestial mechanics simulation engine with a real-time interact
 
 ## Architecture
 
-- **C++** (`cpp/`) — Primary renderer: SDL2 real-time display, leapfrog integrator, full solar system
-- **Rust** (`rust/`) — Headless physics benchmark: n-body gravity, RK4/Verlet integrators, energy drift analysis
-- **Kotlin** (`kotlin/`) — ASCII terminal preview: orbit tracing, simulation stats
+| Component | Language | Role |
+|---|---|---|
+| `cpp/` | C++ | Real-time SDL2 renderer, leapfrog integrator, full solar system |
+| `rust/` | Rust | Headless n-body benchmark, RK4 integrator, energy drift analysis |
+| `kotlin/` | Kotlin | ASCII terminal preview, orbit tracing, simulation stats |
 
-## Features
+The three implementations are independent. Only the C++ renderer is interactive.
 
-### Solar System Bodies
-- 8 planets with real orbital elements (Mercury → Neptune)
-- 6 dwarf planets: Ceres, Pluto, Eris, Haumea, Makemake, Sedna (506 AU semi-major axis)
-- Halley's Comet with accurate eccentricity (e = 0.967)
+## Project Structure
+
+```
+orrery/
+├── cpp/
+│   ├── src/
+│   │   ├── main.cpp              # Simulation loop, bodies, input handling
+│   │   ├── renderer.h / .cpp     # Software rasterizer, textures, HUD
+│   │   └── orbit_integrator.h   # Leapfrog integrator, BodyState
+│   └── CMakeLists.txt
+├── rust/
+│   └── src/main.rs              # RK4 simulation, energy drift benchmark
+└── kotlin/
+    └── src/Main.kt              # ASCII renderer, orbit tracer
+```
+
+## Solar System Bodies
+
+### Planets
+8 planets initialized from real orbital elements (semi-major axis, eccentricity, inclination, argument of periapsis, longitude of ascending node, mean anomaly). Initial Cartesian state vectors are computed via full Kepler equation solving (Newton's method, 50 iterations) and rotation matrices.
+
+### Dwarf Planets
+| Body | Semi-major axis | Eccentricity |
+|---|---|---|
+| Ceres | 2.77 AU | 0.076 |
+| Pluto | 39.5 AU | 0.249 |
+| Haumea | 43.3 AU | 0.159 |
+| Makemake | 45.8 AU | 0.156 |
+| Eris | 67.8 AU | 0.441 |
+| Sedna | ~506 AU | 0.846 |
+
+### Comets
+- Halley's Comet — e = 0.967, i = 162°, rendered with a glowing tail
+- Spawnable random comets (C key) — eccentric orbits, randomized inclination
 
 ### Moons
-- Earth: Moon
-- Mars: Phobos, Deimos
-- Jupiter: Io, Europa, Ganymede, Callisto
-- Saturn: Enceladus, Rhea, Titan
-- Uranus: Miranda, Ariel, Umbriel, Titania, Oberon
-- Neptune: Triton (retrograde orbit)
-- Moon labels appear at zoom ≥ 8×
+| Planet | Moons |
+|---|---|
+| Earth | Moon |
+| Mars | Phobos, Deimos |
+| Jupiter | Io, Europa, Ganymede, Callisto |
+| Saturn | Enceladus, Rhea, Titan |
+| Uranus | Miranda, Ariel, Umbriel, Titania, Oberon |
+| Neptune | Triton (retrograde — negative period) |
+
+Moon labels are hidden below 8× zoom to avoid clutter.
 
 ### Small Bodies
-- Asteroid belt (600 bodies, 2.1–3.3 AU) with Kirkwood gaps at 4:1, 3:1, 5:2, 7:3, 2:1 Jupiter resonances
-- Jupiter Trojans: 80 at L4, 80 at L5 Lagrange points
-- Kuiper belt: 400 icy bodies (30–50 AU, bluish tint)
-- Spawnable comets with glowing tails (C key)
+- **Asteroid belt** — 600 bodies (2.1–3.3 AU), orbiting via Kepler's third law (`ω = √(GM/a³)`), with Kirkwood gaps at the 4:1, 3:1, 5:2, 7:3, and 2:1 Jupiter resonances
+- **Jupiter Trojans** — 80 bodies at L4 (+60°), 80 at L5 (−60°) relative to Jupiter's current angle
+- **Kuiper belt** — 400 icy bodies (30–50 AU), bluish tint
 
-### Rendering
-- Procedural planet textures with rotation
-- Saturn's rings
-- Comet tails
-- Orbit guide lines (toggleable)
-- Procedural nebula + starfield background (cached for performance)
-- Orbital trails with adaptive recording interval
+## Rendering
 
-### Controls
+### Projection
+Distances are compressed using a square-root warp so the outer solar system (Neptune at 30 AU, Sedna at 506 AU) remains visible alongside the inner planets:
+
+```
+warped_radius = √(r / max_radius) × pixel_radius
+```
+
+### Pipeline (9 layers, drawn in order)
+1. Background — procedural nebula + starfield, cached at startup via `memcpy` each frame
+2. Orbit guides — dotted ellipses sampled from orbital elements
+3. Asteroid/Kuiper belt particles
+4. Orbital trails — fade with age, adaptive recording interval scales with time speed
+5. Comet tails — fan of additive-blended lines pointing away from the Sun
+6. Glows — cubic-falloff additive glow around bright bodies
+7. Rings — tilted ellipse with brightness variation (Saturn)
+8. Bodies — procedural spherical textures with Lambertian shading, or flat AA circles
+9. Labels + HUD — bitmap font, legend, speed/elapsed time overlay
+
+### Procedural Textures
+Each planet uses fBm (fractal Brownian motion) noise mapped onto a sphere with UV coordinates derived from the surface normal. Features include:
+- Sun: granulation + bright spots
+- Earth: continents, clouds, polar caps
+- Jupiter: banded atmosphere + Great Red Spot
+- Mars: terrain variation + polar caps
+- Saturn/Uranus/Neptune: banded atmospheres
+
+## Controls
+
 | Key / Input | Action |
 |---|---|
 | `Space` | Pause / resume |
@@ -51,11 +106,6 @@ A multi-language celestial mechanics simulation engine with a real-time interact
 | `C` | Spawn random comet |
 | `H` | Toggle help overlay |
 | `Esc` | Quit |
-
-### HUD
-- Simulated time elapsed (days / years)
-- Current time scale
-- Body legend with orbital distances
 
 ## Building & Running
 
@@ -73,19 +123,21 @@ cmake -B build && cmake --build build
 ```
 
 ### Rust (physics benchmark)
+Runs a 1-year RK4 simulation of the solar system and reports energy drift:
 ```bash
 cd rust && cargo build --release && cargo run --release
 ```
 
 ### Kotlin (ASCII preview)
+Renders a terminal snapshot of initial body positions:
 ```bash
 cd kotlin && ./gradlew run
 ```
 
 ## Physics
 
-- Leapfrog integrator (C++ renderer)
-- RK4 and Verlet integrators (Rust benchmark)
-- Kepler's third law for asteroid belt angular velocity: `ω = √(GM/a³)`
-- Full Kepler equation solver (Newton's method, 50 iterations) for initial conditions
-- Orbital elements → Cartesian state vectors via rotation matrices
+- **Leapfrog integrator** — symplectic, used in the C++ real-time renderer (dt = 7200 s, 30 steps/frame)
+- **RK4 integrator** — used in the Rust benchmark for energy drift analysis
+- **Kepler equation** — Newton's method (50 iterations) to solve `E - e·sin(E) = M`
+- **Orbital elements → state vectors** — via rotation matrices (Ω, ω, i) applied to the orbital plane
+- **Asteroid angular velocity** — `ω = √(GM/a³)` (Kepler's third law)
