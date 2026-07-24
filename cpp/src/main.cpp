@@ -1,3 +1,6 @@
+//Colin Leary 
+//main.cpp
+
 #include "renderer.h"
 #include "orbit_integrator.h"
 #include <SDL.h>
@@ -293,6 +296,7 @@ int main(int argc, char* argv[]) {
                 if (event.key.keysym.sym == SDLK_SPACE) paused = !paused;
                 if (event.key.keysym.sym == SDLK_RIGHT) time_scale = std::min(16.0, time_scale * 2.0);
                 if (event.key.keysym.sym == SDLK_LEFT) time_scale = std::max(0.125, time_scale * 0.5);
+                if (event.key.keysym.sym == SDLK_1) time_scale = 1.0;
                 if (event.key.keysym.sym == SDLK_r) {
                     zoom = 1.0; pan_x = 0.0; pan_y = 0.0; follow_body = -1;
                     renderer = Renderer(W, H, 5.5e12);
@@ -538,6 +542,7 @@ int main(int argc, char* argv[]) {
             legend_with_time.push_back({"Controls:", {180,180,200}, ""});
             legend_with_time.push_back({"Space", {150,150,170}, "pause"});
             legend_with_time.push_back({"Left:Right", {150,150,170}, "speed"});
+            legend_with_time.push_back({"1", {150,150,170}, "speed reset"});
             legend_with_time.push_back({"Scroll", {150,150,170}, "zoom"});
             legend_with_time.push_back({"Drag", {150,150,170}, "pan"});
             legend_with_time.push_back({"Dbl-click", {150,150,170}, "follow"});
