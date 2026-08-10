@@ -42,6 +42,7 @@ orrery/
 | Makemake | 45.8 AU | 0.156 |
 | Eris | 67.8 AU | 0.441 |
 | Sedna | ~506 AU | 0.846 |
+| Quaoar | 43.7 AU | 0.039 |
 
 ### Comets
 - Halley's Comet — e = 0.967, i = 162°, rendered with a glowing tail

@@ -123,6 +123,7 @@ int main(int argc, char* argv[]) {
         {6.4836e12, 0.1590,  28.19*DEG, 241.7*DEG,  79.6*DEG,   218.0*DEG, 4.006e21},  // Haumea
         {6.7153e12, 0.1559,  29.00*DEG, 296.5*DEG,  136.4*DEG,  165.5*DEG, 3.1e21},    // Makemake
         {7.5076e13, 0.8459,  11.93*DEG, 311.5*DEG,  144.5*DEG,  358.0*DEG, 8.0e20},    // Sedna
+        {6.5360e12, 0.0392,  7.99*DEG,  163.7*DEG,  188.8*DEG,  296.0*DEG, 1.2e21},    // Quaoar
     };
 
     std::vector<BodyState> bodies;
@@ -137,7 +138,7 @@ int main(int argc, char* argv[]) {
         bodies.push_back({pos, vel, oe.mass});
     }
 
-    constexpr int N = 16;
+    constexpr int N = 17;
 
     // Jupiter's Galilean moons - orbital radii and periods
     struct Moon {
@@ -193,8 +194,8 @@ int main(int argc, char* argv[]) {
         orbit_guides.push_back({oe.a, oe.e, oe.i, oe.omega, oe.Omega, orbit_colors[i]});
     }
     orbit_guides.push_back({halley.a, halley.e, halley.i, halley.omega, halley.Omega, {40,60,40}});
-    Color dwarf_orbit_colors[] = {{80,80,60},{140,120,100},{100,100,120},{120,90,90},{110,100,80},{100,50,50}};
-    for (int i = 0; i < 6; ++i) {
+    Color dwarf_orbit_colors[] = {{80,80,60},{140,120,100},{100,100,120},{120,90,90},{110,100,80},{100,50,50},{90,80,110}};
+    for (int i = 0; i < 7; ++i) {
         auto& oe = dwarf_planets[i];
         orbit_guides.push_back({oe.a, oe.e, oe.i, oe.omega, oe.Omega, dwarf_orbit_colors[i]});
     }
@@ -261,6 +262,7 @@ int main(int argc, char* argv[]) {
         {"Haumea",  {200,160,150}, "43.3 AU"},
         {"Makemake",{190,170,140}, "45.8 AU"},
         {"Sedna",   {200,100,100}, "506 AU"},
+        {"Quaoar",  {180,170,190}, "43.7 AU"},
     };
 
     Renderer renderer(W, H, 5.5e12);
@@ -449,6 +451,7 @@ int main(int argc, char* argv[]) {
             {"Haumea",  bodies[13].position, 2, {200,160,150},  4, {90,70,65}, trails[13], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
             {"Makemake",bodies[14].position, 2, {190,170,140},  4, {85,75,60}, trails[14], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
             {"Sedna",   bodies[15].position, 2, {200,100,100},  4, {90,40,40}, trails[15], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
+            {"Quaoar",  bodies[16].position, 2, {180,170,190},  4, {80,75,85}, trails[16], false, 0, 0, {}, false, 0, TextureType::FLAT, 0},
         };
         rb[6].has_ring = true; rb[6].ring_inner = 12; rb[6].ring_outer = 20; rb[6].ring_color = {200,180,130};
         rb[9].is_comet = true; rb[9].tail_length = 30;
