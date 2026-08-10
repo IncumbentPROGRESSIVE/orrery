@@ -181,6 +181,10 @@ int main(int argc, char* argv[]) {
         {"Oberon",  5.835e8,  13.46*86400.0, PI*1.7,    {160,155,150}},
     };
 
+    std::vector<Moon> pluto_moons = {
+        {"Charon",  1.9591e7, 6.387*86400.0, 0.0,       {190,180,170}},
+    };
+
     // Orbit guides
     std::vector<OrbitGuide> orbit_guides;
     Color orbit_colors[] = {{60,60,60},{80,70,50},{40,60,100},{90,50,25},{80,65,40},{80,70,50},{50,80,85},{30,45,90}};
@@ -403,6 +407,10 @@ int main(int argc, char* argv[]) {
         for (auto& moon : uranus_moons) {
             moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
         }
+        // Advance Pluto moon
+        for (auto& moon : pluto_moons) {
+            moon.angle += (2.0 * PI / moon.period) * dt * time_scale * steps_per_frame;
+        }
 
         // Advance rotation phase
         rotation_phase += 0.02 * time_scale;
@@ -522,6 +530,18 @@ int main(int argc, char* argv[]) {
             };
             std::string label = (zoom >= 8.0) ? moon.name : "";
             rb.push_back({label, moon_pos, 2, moon.color, 3, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
+        }
+
+        // Add Pluto's moon (Charon)
+        Vec3f pluto_pos = bodies[11].position;
+        for (const auto& moon : pluto_moons) {
+            Vec3f moon_pos = pluto_pos + Vec3f{
+                moon.orbital_radius * std::cos(moon.angle),
+                moon.orbital_radius * std::sin(moon.angle),
+                0
+            };
+            std::string label = (zoom >= 8.0) ? moon.name : "";
+            rb.push_back({label, moon_pos, 1, moon.color, 2, Color{(uint8_t)(moon.color.r/3), (uint8_t)(moon.color.g/3), (uint8_t)(moon.color.b/3)}, {}, false, 0, 0, {}, false, 0, TextureType::FLAT, 0});
         }
 
         // Render

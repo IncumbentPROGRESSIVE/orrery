@@ -56,6 +56,7 @@ orrery/
 | Saturn | Enceladus, Rhea, Titan |
 | Uranus | Miranda, Ariel, Umbriel, Titania, Oberon |
 | Neptune | Triton (retrograde — negative period) |
+| Pluto | Charon |
 
 Moon labels are hidden below 8× zoom to avoid clutter.
 
