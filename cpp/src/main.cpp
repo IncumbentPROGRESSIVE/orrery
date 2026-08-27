@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <sstream>
 
 static constexpr double G_CONST = 6.674e-11;
 static constexpr double M_SUN = 1.989e30;
@@ -557,9 +558,13 @@ int main(int argc, char* argv[]) {
         std::string elapsed_str = years >= 1.0 ?
             std::to_string((int)years) + "y " + std::to_string((int)std::fmod(days, 365.25)) + "d" :
             std::to_string((int)days) + " days";
+        std::ostringstream zoom_ss;
+        zoom_ss.precision(zoom < 1.0 ? 2 : 1);
+        zoom_ss << std::fixed << zoom << "x";
         auto legend_with_time = legend;
         legend_with_time.push_back({"Speed: " + time_label, {200,200,100}, ""});
         legend_with_time.push_back({"Elapsed: " + elapsed_str, {150,180,200}, ""});
+        legend_with_time.push_back({"Zoom: " + zoom_ss.str(), {170,190,150}, ""});
         if (show_help) {
             legend_with_time.push_back({"", {0,0,0}, ""});
             legend_with_time.push_back({"Controls:", {180,180,200}, ""});
