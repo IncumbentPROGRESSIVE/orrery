@@ -294,6 +294,7 @@ int main(int argc, char* argv[]) {
     double elapsed_seconds = 0.0;
     bool show_help = false;
     bool show_orbits = true;
+    bool show_trails = true;
     uint32_t comet_seed = 31415;
 
     while (running) {
@@ -312,6 +313,7 @@ int main(int argc, char* argv[]) {
                 }
                 if (event.key.keysym.sym == SDLK_h) show_help = !show_help;
                 if (event.key.keysym.sym == SDLK_o) show_orbits = !show_orbits;
+                if (event.key.keysym.sym == SDLK_t) show_trails = !show_trails;
                 if (event.key.keysym.sym == SDLK_c) {
                     // Spawn a random comet
                     auto rng_c = [&]() -> uint32_t { comet_seed = comet_seed * 1664525u + 1013904223u; return comet_seed; };
@@ -578,11 +580,13 @@ int main(int argc, char* argv[]) {
             legend_with_time.push_back({"Dbl-click", {150,150,170}, "follow"});
             legend_with_time.push_back({"R", {150,150,170}, "reset"});
             legend_with_time.push_back({"O", {150,150,170}, "orbits"});
+            legend_with_time.push_back({"T", {150,150,170}, "trails"});
             legend_with_time.push_back({"C", {150,150,170}, "comet"});
             legend_with_time.push_back({"H", {150,150,170}, "help"});
         } else {
             legend_with_time.push_back({"H for help", {100,100,120}, ""});
         }
+        renderer.show_trails = show_trails;
         renderer.render_frame(rb, show_orbits ? orbit_guides : std::vector<OrbitGuide>{}, asteroid_particles, legend_with_time);
 
         // Blit to SDL texture

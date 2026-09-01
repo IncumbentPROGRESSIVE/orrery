@@ -105,6 +105,7 @@ Each planet uses fBm (fractal Brownian motion) noise mapped onto a sphere with U
 | Double-click | Follow body (auto-zooms to 16×) |
 | `R` | Reset zoom / pan / follow |
 | `O` | Toggle orbit guides |
+| `T` | Toggle trails |
 | `C` | Spawn random comet |
 | `H` | Toggle help overlay |
 | `Esc` | Quit |

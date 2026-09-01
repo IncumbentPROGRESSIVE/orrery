@@ -544,8 +544,10 @@ void Renderer::render_frame(
         draw_particle(p);
 
     // Layer 3: trails
-    for (const auto& body : bodies)
-        draw_trail(body.trail, body.color);
+    if (show_trails) {
+        for (const auto& body : bodies)
+            draw_trail(body.trail, body.color);
+    }
 
     // Layer 4: comet tails (behind body)
     Vec3f sun_pos = bodies.empty() ? Vec3f{} : bodies[0].position;

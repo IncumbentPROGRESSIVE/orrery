@@ -70,6 +70,7 @@ class Renderer {
 public:
     Renderer(int width, int height, double max_radius);
     void set_pan(double px, double py) { pan_x_ = px; pan_y_ = py; }
+    bool show_trails = true;
     std::pair<int,int> project_public(const Vec3f& pos) const { return project(pos); }
     void draw_label_public(const Vec3f& pos, const std::string& name, int radius, bool has_ring, int ring_outer) {
         auto [sx, sy] = project(pos);
